@@ -3,6 +3,7 @@ SOURCES = glm.c main.c
 DEPENDS = $(SOURCES:.c=.d)
 OBJECTS = $(SOURCES:.c=.o)
 PROGRAMS = main
+OUT = out/
 
 ifdef DEBUG
 OPTFLAGS = -g
@@ -11,7 +12,7 @@ OPTFLAGS = -O3
 endif
 
 CC      = gcc
-CFLAGS  = -Wall $(OPTFLAGS)
+CFLAGS  = -Wno-everything $(OPTFLAGS)
 LDFLAGS = -lGL -lglu -lglut
 
 UNAME = $(shell uname)
@@ -23,25 +24,26 @@ CFLAGS  += -arch i386
 endif
 
 
-all: $(PROGRAMS)
+all: makedir $(OUT)$(PROGRAMS)
 
-$(PROGRAMS):
+$(OUT)$(PROGRAMS):
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 define PROGRAM_template
-$(1): $(addsuffix .o,$(1)) glm.o
+$(1): $(addsuffix .o,$(1)) out/glm.o
 endef
-$(foreach t,$(PROGRAMS),$(eval $(call PROGRAM_template,$(t))))
+$(foreach t,$(OUT)$(PROGRAMS),$(eval $(call PROGRAM_template,$(t))))
+
+makedir: $(OUT)
+
+$(OUT):
+	mkdir -p $@
 
 clean:
-	$(RM) $(OBJECTS) $(DEPENDS)
-	$(RM) $(PROGRAMS:=$(EXE))
+	$(RM) -r $(OUT)
 
-.PHONY: all clean
+.PHONY: makedir all clean
 
-%.o: %.c
+$(OUT)%.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
-
-%.d: %.c
-	$(CC) -MM $< -o $@
 
