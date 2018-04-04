@@ -24,7 +24,7 @@ CFLAGS  += -arch i386
 endif
 
 
-all: makedir $(OUT)$(PROGRAMS)
+all: clean makedir $(OUT)$(PROGRAMS)
 
 $(OUT)$(PROGRAMS):
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
@@ -41,8 +41,10 @@ $(OUT):
 
 clean:
 	$(RM) -r $(OUT)
+run: 
+	./out/main
 
-.PHONY: makedir all clean
+.PHONY: makedir all clean run
 
 $(OUT)%.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
