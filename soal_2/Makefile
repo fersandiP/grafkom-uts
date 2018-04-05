@@ -1,5 +1,5 @@
-HEADERS = glm.h
-SOURCES = glm.c main.c
+HEADERS = glm.h function.h
+SOURCES = glm.c main.c function.c
 DEPENDS = $(SOURCES:.c=.d)
 OBJECTS = $(SOURCES:.c=.o)
 PROGRAMS = main
@@ -35,7 +35,7 @@ $(OUT)$(PROGRAMS):
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 define PROGRAM_template
-$(1): $(addsuffix .o,$(1)) out/glm.o
+$(1): $(addsuffix .o,$(1)) out/glm.o out/function.o
 endef
 $(foreach t,$(OUT)$(PROGRAMS),$(eval $(call PROGRAM_template,$(t))))
 
