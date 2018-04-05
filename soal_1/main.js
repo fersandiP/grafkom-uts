@@ -7,50 +7,43 @@ const KEY_A = 65;
 const KEY_W = 87;
 const KEY_D = 68;
 const KEY_S = 83;
-const MOVE_OFFSET = 20;
+const MOVE_OFFSET = 50;
+const MOVE_CIRCLE_OFFSET = 7;
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 720;
 
 const CIRCLE_RADIUS = 20;
 const CIRCLE_X = CANVAS_WIDTH/2;
 const CIRCLE_Y = CANVAS_HEIGHT/2;
+const rectwidth = 20;      // rectangle width
+const rectheight = 150;   // rectangle height
 
 var canvas;
 var gl;
 var colorUniformLocation;
-var translation = [30, 10]; //top-left of rectangle
-const rectwidth = 20;      // rectangle width
-const rectheight = 100;   // rectangle height
+var translationRectangle = [100, CANVAS_HEIGHT/2 - rectheight/2]; //top-left of rectangle
+var translationCircle = [0,0];
+
 var translationLocation;
+
+var circleDirection = [1,0];
 
 
 $(document).ready(function(){
   init();
 
-  $("#sliderX").change(function(e){
-    translation[0] = e.target.value;
-    $("#Xvalue").innerHTML = translation[0];
-    render();
-  });
-
-  $("#sliderY").change(function(e){
-    translation[1] = e.target.value;
-    $("#Yvalue").innerHTML = translation[1];
-    render();
-  });
-
   $(document).keydown(function(event) {
     // Move Up
     if (event.which == KEYUP || event.which == KEY_W){
-      if (translation[1] > 0){
-        translation[1] = Math.max(0, translation[1] - MOVE_OFFSET);
+      if (translationRectangle[1] > 0){
+        translationRectangle[1] = Math.max(0, translationRectangle[1] - MOVE_OFFSET);
       }
     }
 
     // Move down
     if (event.which == KEYDOWN || event.which == KEY_S){
-      if (translation[1] < CANVAS_HEIGHT - rectheight){
-        translation[1] = Math.min(CANVAS_HEIGHT - rectheight, translation[1] + MOVE_OFFSET);
+      if (translationRectangle[1] < CANVAS_HEIGHT - rectheight){
+        translationRectangle[1] = Math.min(CANVAS_HEIGHT - rectheight, translationRectangle[1] + MOVE_OFFSET);
       }
     }
   });
@@ -97,18 +90,24 @@ function init()
 
 function render(){
   gl.clear( gl.COLOR_BUFFER_BIT );
-  setRectangle(gl, translation[0], translation[1], rectwidth, rectheight); 
+  setRectangle(gl, 0, 0, rectwidth, rectheight); 
   render_rectangle();
 
   setBall(gl, CIRCLE_RADIUS, CIRCLE_X, CIRCLE_Y );
+  moveBall();
   render_ball();
 
-  requestAnimationFrame(render);
+  setRectangle(gl, 100,120,150);
+  render_rectangle();
+
+  if (!checkLose()){
+    requestAnimationFrame(render);
+  }
 }
 
 function render_rectangle(){
   gl.uniform4f(colorUniformLocation, 1.0, 0, 0, 1);
-  gl.uniform2fv(translationLocation, translation);
+  gl.uniform2fv(translationLocation, translationRectangle);
     
   var primitiveType = gl.TRIANGLES;
   var offset = 0;
@@ -121,7 +120,7 @@ function render_rectangle(){
 function render_ball() 
 {
     gl.uniform4f(colorUniformLocation, 0.0, 1.0, 0, 1);
-    gl.uniform2fv(translationLocation, [0,0]);
+    gl.uniform2fv(translationLocation, translationCircle);
 
 	var primitiveType = gl.TRIANGLE_FAN;
 	var offset = 0;
@@ -129,6 +128,16 @@ function render_ball()
 		
 	gl.drawArrays( primitiveType, offset, count );
 	
+}
+
+function render_triangle(){
+    gl.uniform4f(colorUniformLocation, 0.0, 1.0, 0, 1);
+
+    var primitiveType = gl.TRIANGLES;
+    var offset = 0;
+    var count = 3;
+
+    gl.drawArrays(primitiveType, offset, count);
 }
 
 // Fill the buffer with the values that define a rectangle.
@@ -158,10 +167,54 @@ function setBall(gl, r, x, y){
         r*Math.sin(2*Math.PI*i/100.0) + y
     ));
 
+    }
+  gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
 }
 
-  gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
-} 
+function setTriangle(gl,x,y,z){
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        x, y,
+        y, z,
+        z, x,
+        ]), gl.STATIC_DRAW);
+}
+
+function moveBall(){
+    if (circleDirection[0]){
+        translationCircle[0] += MOVE_CIRCLE_OFFSET;
+    } else {
+        translationCircle[0] -= MOVE_CIRCLE_OFFSET;
+    }
+
+    if (circleDirection[1]){
+        translationCircle[1] += MOVE_CIRCLE_OFFSET;
+    } else {
+        translationCircle[1] -= MOVE_CIRCLE_OFFSET;
+    }
+
+    checkCollision();
+    if (translationCircle[0] + CIRCLE_X - CIRCLE_RADIUS < 0) circleDirection[0] = 1;
+    if (translationCircle[0] + CIRCLE_X + CIRCLE_RADIUS > CANVAS_WIDTH) circleDirection[0] = 0;
+    if (translationCircle[1] + CIRCLE_Y - CIRCLE_RADIUS < 0) circleDirection[1] = 1;
+    if (translationCircle[1] + CIRCLE_Y + CIRCLE_RADIUS > CANVAS_HEIGHT) circleDirection[1] = 0;
+}
+
+function checkCollision(){
+    let cirleLeftmostPoint = translationCircle[0] + CIRCLE_X - CIRCLE_RADIUS;
+    if (cirleLeftmostPoint <= rectwidth + translationRectangle[0] && cirleLeftmostPoint > rectwidth + translationRectangle[0] - 20){
+        let circleTopPoint = translationCircle[1] + CIRCLE_Y - CIRCLE_RADIUS;
+        let circleBottomPoint = translationCircle[1] + CIRCLE_Y + CIRCLE_RADIUS;
+
+        if (circleTopPoint >= translationRectangle[1] && circleBottomPoint <= rectheight + translationRectangle[1]){
+            circleDirection[0] = 1;
+        }
+    }
+}
+
+function checkLose(){
+    let circleCenterPoint = translationCircle[0] + CIRCLE_X;
+    return circleCenterPoint <= rectwidth
+}
  
 var m3 = {            //setup 3x3 transformation matrix object
    identity: function() {
