@@ -1,0 +1,16 @@
+canvas {
+  background-color: black; 
+  width: 100%;
+  height: auto;
+}
+
+.col-md-2 {
+    background-color: #e3e3e3;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 10px 10px 10px 10px;
+}
+
+h4 {
+	padding-left: 20px;
+}

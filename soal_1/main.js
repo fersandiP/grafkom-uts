@@ -7,7 +7,7 @@ const KEY_A = 65;
 const KEY_W = 87;
 const KEY_D = 68;
 const KEY_S = 83;
-const MOVE_OFFSET = 50;
+const MOVE_OFFSET = 70;
 const MOVE_CIRCLE_OFFSET = 7;
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 720;
@@ -22,13 +22,13 @@ const TRIANGLE_MIN_Y = 100;
 const TRIANGLE_MAX_X = CANVAS_WIDTH - 100;
 const TRIANGLE_MAX_Y = CANVAS_HEIGHT - 100;
 const TRIANGLE_SIZE = 50;
-const HIT_BOX_TRIANGLE_DISTANCE = 40;
+const HIT_BOX_TRIANGLE_DISTANCE = 45;
 
 var canvas;
 var gl;
 var colorUniformLocation;
 var matrixLocation;
-var translationRectangle = [100, CANVAS_HEIGHT/2 - rectheight/2]; //top-left of rectangle
+var translationRectangle = [100, CANVAS_HEIGHT/2 - rectheight/2];
 var translationCircle = [0,0];
 
 var translationLocation;
@@ -38,26 +38,32 @@ var triangleAngle = 0;
 var triangleState = {};
 
 var user_score = 0;
+var inGame = false;
 
 $(document).ready(function(){
-  init();
+    $("#start-button").click(function(event){
+        $(this).attr("disabled", "disabled");
+        inGame = true;
+        init();
+    });
 
   $(document).keydown(function(event) {
+    if (!inGame){return;}
+
     // Move Up
     if (event.which == KEYUP || event.which == KEY_W){
-      if (translationRectangle[1] > 0){
-        translationRectangle[1] = Math.max(0, translationRectangle[1] - MOVE_OFFSET);
+        if (translationRectangle[1] > 0){
+            translationRectangle[1] = Math.max(0, translationRectangle[1] - MOVE_OFFSET);
+        }
     }
-}
 
-    // Move down
+        // Move down
     if (event.which == KEYDOWN || event.which == KEY_S){
-      if (translationRectangle[1] < CANVAS_HEIGHT - rectheight){
-        translationRectangle[1] = Math.min(CANVAS_HEIGHT - rectheight, translationRectangle[1] + MOVE_OFFSET);
+        if (translationRectangle[1] < CANVAS_HEIGHT - rectheight){
+            translationRectangle[1] = Math.min(CANVAS_HEIGHT - rectheight, translationRectangle[1] + MOVE_OFFSET);
+        }
     }
-}
-});
-
+    });
 });
 
 //source : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
@@ -104,7 +110,7 @@ function init()
 
     initTriangleState();
 
-    render(); //default render
+    render();
 }
 
 function initTriangleState(){
@@ -116,27 +122,22 @@ function initTriangleState(){
     };
 }
 
-function rotateTriangleState(){
-    var centerTriangle = [triangleState.x + triangleState.r/2, triangleState.y - triangleState.r/2];
-
-    triangleState.angle += 1;
-    triangleState.angle %= 50;
-}
-
 function render(){
-  gl.clear( gl.COLOR_BUFFER_BIT );
-  setRectangle(gl, 0, 0, rectwidth, rectheight); 
-  render_rectangle();
+    gl.clear( gl.COLOR_BUFFER_BIT );
+    setRectangle(gl, 0, 0, rectwidth, rectheight); 
+    render_rectangle(); 
 
-  setBall(gl, CIRCLE_RADIUS, CIRCLE_X, CIRCLE_Y );
-  moveBall();
-  render_ball();
+    setBall(gl, CIRCLE_RADIUS, CIRCLE_X, CIRCLE_Y );
+    moveBall();
+    render_ball();
 
-  triangleHandle()
+    triangleHandle();
 
-  if (!checkLose()){
-    requestAnimationFrame(render);
-}
+    if (!checkLose()){
+        requestAnimationFrame(render);
+    } else {
+        gameStopHandle();
+    }
 }
 
 function render_rectangle(){
@@ -155,7 +156,6 @@ function render_ball()
 {
     gl.uniform4f(colorUniformLocation, 0.0, 1.0, 0, 1);
     gl.uniform2fv(translationLocation, translationCircle);
-
 
     var primitiveType = gl.TRIANGLE_FAN;
     var offset = 0;
@@ -265,6 +265,7 @@ function checkCollisionWithTriangle(){
 
     if (circleDistanceToTriangle < HIT_BOX_TRIANGLE_DISTANCE){
         user_score += 1;
+        updateScore();
         initTriangleState();
     }
 }
@@ -282,4 +283,15 @@ function triangleHandle(){
 
 function euclidDistance(x1,y1,x2,y2){
     return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+}
+
+function gameStopHandle(){
+    $("#start-button").attr("disabled", false);
+    user_score = 0;
+    translationRectangle = [100, CANVAS_HEIGHT/2 - rectheight/2];
+    translationCircle = [0,0];
+}
+
+function updateScore(){
+    $("#user-score").text(user_score);
 }
