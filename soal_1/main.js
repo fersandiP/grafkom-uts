@@ -16,23 +16,28 @@ const CIRCLE_Y = CANVAS_HEIGHT/2;
 const rectwidth = 20;      // rectangle width
 const rectheight = 150;   // rectangle height
 
+//Define region of triangle appear
 const TRIANGLE_MIN_X = rectwidth + 200;
 const TRIANGLE_MIN_Y = 100;
 const TRIANGLE_MAX_X = CANVAS_WIDTH - 100;
 const TRIANGLE_MAX_Y = CANVAS_HEIGHT - 100;
+
 const TRIANGLE_SIZE = 50;
-const HIT_BOX_TRIANGLE_DISTANCE = 45;
+
+//Define distance between ball and triangle to consider ball hit triangle
+const HIT_BOX_TRIANGLE_DISTANCE = 45; 
 
 var canvas;
 var gl;
 var colorUniformLocation;
-var matrixLocation;
+
 var translationRectangle = [100, CANVAS_HEIGHT/2 - rectheight/2];
 var translationCircle = [0,0];
 
 var translationLocation;
 
 var circleDirection = [1,0];
+
 var triangleAngle = 0;
 var triangleState = {};
 
@@ -44,6 +49,7 @@ $(document).ready(function(){
         $(this).attr("disabled", "disabled");
         inGame = true;
         $("#user-score").text(user_score);
+
         init();
     });
 
@@ -57,7 +63,7 @@ $(document).ready(function(){
         }
     }
 
-        // Move down
+    // Move down
     if (event.which == KEYDOWN || event.which == KEY_S){
         if (translationRectangle[1] < CANVAS_HEIGHT - rectheight){
             translationRectangle[1] = Math.min(CANVAS_HEIGHT - rectheight, translationRectangle[1] + MOVE_OFFSET);
@@ -65,13 +71,6 @@ $(document).ready(function(){
     }
     });
 });
-
-//source : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
-}
 
 function init()
 {
@@ -124,6 +123,7 @@ function initTriangleState(){
 
 function render(){
     gl.clear( gl.COLOR_BUFFER_BIT );
+
     setRectangle(gl, 0, 0, rectwidth, rectheight); 
     render_rectangle(); 
 
@@ -192,6 +192,7 @@ function setRectangle(gl, x, y, width, height) {
    ]), gl.STATIC_DRAW);
 }
 
+//Create ball using many triangle_fan
 function setBall(gl, r, x, y){
   var points = []
   var center = vec2(x, y); 
@@ -208,6 +209,7 @@ gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
 }
 
 function setTriangle(gl, x, y, r, angle){
+    //Rotate triangle using three points.
   var x1 = r * Math.cos(2*Math.PI*angle/100.0) + x;
   var y1 = r * Math.sin(2*Math.PI*angle/100.0) + y;
   var x2 = r * Math.cos(2*Math.PI*angle/100.0 + (2.0/3)*Math.PI) + x;
@@ -221,6 +223,12 @@ function setTriangle(gl, x, y, r, angle){
     x2, y2,
     x3, y3,
     ]), gl.STATIC_DRAW);
+}
+
+function triangleHandle(){
+    triangleState.angle  = (triangleState.angle + 1) % 100;
+    setTriangle(gl, triangleState.x, triangleState.y ,triangleState.r, triangleState.angle);
+    render_triangle();
 }
 
 function moveBall(){
@@ -238,18 +246,21 @@ function moveBall(){
 
     checkCollision();
     checkCollisionWithTriangle();
+
+    //Change Ball direction if ball hit wall
     if (translationCircle[0] + CIRCLE_X - CIRCLE_RADIUS < 0) circleDirection[0] = 1;
     if (translationCircle[0] + CIRCLE_X + CIRCLE_RADIUS > CANVAS_WIDTH) circleDirection[0] = 0;
     if (translationCircle[1] + CIRCLE_Y - CIRCLE_RADIUS < 0) circleDirection[1] = 1;
     if (translationCircle[1] + CIRCLE_Y + CIRCLE_RADIUS > CANVAS_HEIGHT) circleDirection[1] = 0;
 }
 
+//Check ball collision with rectangle, if collide rectangle will reflect direction of ball
 function checkCollision(){
-    let cirleLeftmostPoint = translationCircle[0] + CIRCLE_X - CIRCLE_RADIUS;
+    var cirleLeftmostPoint = translationCircle[0] + CIRCLE_X - CIRCLE_RADIUS;
     if (cirleLeftmostPoint <= rectwidth + translationRectangle[0] && 
         cirleLeftmostPoint > rectwidth + translationRectangle[0] - 20){
-        let circleTopPoint = translationCircle[1] + CIRCLE_Y - CIRCLE_RADIUS;
-        let circleBottomPoint = translationCircle[1] + CIRCLE_Y + CIRCLE_RADIUS;
+        var circleTopPoint = translationCircle[1] + CIRCLE_Y - CIRCLE_RADIUS;
+        var circleBottomPoint = translationCircle[1] + CIRCLE_Y + CIRCLE_RADIUS;
 
         if (circleTopPoint >= translationRectangle[1] - 10 && circleBottomPoint <= rectheight + translationRectangle[1] + 10){
             circleDirection[0] = 1;
@@ -257,6 +268,7 @@ function checkCollision(){
     }
 }
 
+//Check ball collision with triangle, if collide update user score.
 function checkCollisionWithTriangle(){
     var circleCenterPoint = [translationCircle[0] + CIRCLE_X, translationCircle[1] + CIRCLE_Y];
 
@@ -271,18 +283,8 @@ function checkCollisionWithTriangle(){
 }
 
 function checkLose(){
-    let circleCenterPoint = translationCircle[0] + CIRCLE_X;
-    return circleCenterPoint <= rectwidth
-}
-
-function triangleHandle(){
-    triangleState.angle  = (triangleState.angle + 1) % 100;
-    setTriangle(gl, triangleState.x, triangleState.y ,triangleState.r, triangleState.angle);
-    render_triangle();
-}
-
-function euclidDistance(x1,y1,x2,y2){
-    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+    var circleCenterPoint = translationCircle[0] + CIRCLE_X;
+    return circleCenterPoint <= rectwidth;
 }
 
 function gameStopHandle(){
@@ -290,8 +292,23 @@ function gameStopHandle(){
     user_score = 0;
     translationRectangle = [100, CANVAS_HEIGHT/2 - rectheight/2];
     translationCircle = [0,0];
+    inGame = false;
 }
 
 function updateScore(){
     $("#user-score").text(user_score);
+}
+
+/*
+    HELPER FUNCTION
+*/
+function euclidDistance(x1,y1,x2,y2){
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+}
+
+//source : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
