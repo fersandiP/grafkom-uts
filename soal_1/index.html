@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>Moving Rectangle</title>
+
+<!-- Modification from rectangles.html/JS to setup rectangle so it can translate X and/or Y according to slider's  -->
+<!-- Modify vertex shader to perform translation by adding u_translation uniform variable -->
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec2 vPosition;
+uniform vec2 u_resolution;
+uniform vec2 u_translation;
+
+void
+main()
+{
+	vec2 position = vPosition + u_translation;
+	
+// convert the position from pixels to 0.0 to 1.0
+    vec2 zeroToOne = position / u_resolution;
+	
+	// convert from 0->1 to 0->2
+    vec2 zeroToTwo = zeroToOne * 2.0;
+	
+	// convert from 0->2 to -1->+1 (clipspace)
+    vec2 clipSpace = zeroToTwo - 1.0;
+	
+	gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec4 u_color;
+
+void
+main()
+{
+    gl_FragColor = u_color;
+}
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="main.js"></script>
+</head>
+
+<body> 
+
+
+<canvas id="gl-canvas" width="1200" height="720">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+</body>
+</html>
