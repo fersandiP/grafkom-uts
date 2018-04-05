@@ -27,7 +27,7 @@ GLuint subWindow[6];
 GLuint subWidth = 384, subHeight = 256;
 GLMmodel *model = NULL;
 
-void display();
+void mainDisplay();
 void redisplayAll();
 void subDisplay();
 void mainReshape(int width, int height);
@@ -36,9 +36,34 @@ void drawmodel();
 void redisplayAll();
 void mainMenu(int value);
 void mainKeyboard(unsigned char key, int x, int);
+void drawRectangle(int x, int y, int width, int height);
+void drawWindowMark();
 
+void drawWindowMark()
+{
+    int x = (status % 3) * (subWidth +  GAP);
+    int y = (status >= 3) * (subHeight + GAP);
+    drawRectangle(x, y, subWidth + 2 * GAP, subHeight + 2 * GAP);
+}
+
+void drawRectangle(int x, int y, int width, int height)
+{
+    int x1 = x;
+    int y1 = y;
+    int x2 = x + width;
+    int y2 = y + height;
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_POLYGON);
+    glVertex2i(x1, y1);
+    glVertex2i(x1, y2);
+    glVertex2i(x2, y2);
+    glVertex2i(x2, y1);
+    glEnd();
+}
 void redisplayAll()
 {
+    glutSetWindow(mainWindow);
+    glutPostRedisplay();
     for (int i = 0; i < 6; i++)
     {
         glutSetWindow(subWindow[i]);
@@ -106,9 +131,11 @@ void drawmodel(void)
     glmDraw(model, GLM_SMOOTH | GLM_MATERIAL);
 }
 
-void display()
+void mainDisplay()
 {
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    drawWindowMark();
     glutSwapBuffers();
 }
 
@@ -180,7 +207,7 @@ int main(int argc, char *argv[])
     glutInit(&argc, argv);
 
     mainWindow = glutCreateWindow("CAR CCTV");
-    glutDisplayFunc(display);
+    glutDisplayFunc(mainDisplay);
     glutReshapeFunc(mainReshape);
     glutKeyboardFunc(mainKeyboard);
 
