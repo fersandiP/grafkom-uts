@@ -13,7 +13,7 @@ endif
 
 CC      = gcc
 CFLAGS  = -Wno-everything $(OPTFLAGS)
-LDFLAGS = -lGL -lglu -lglut
+LDFLAGS = -lGL -lglut
 
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)  # Mac OS X
