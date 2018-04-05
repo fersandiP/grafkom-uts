@@ -21,7 +21,8 @@ const TRIANGLE_MIN_X = rectwidth + 200;
 const TRIANGLE_MIN_Y = 100;
 const TRIANGLE_MAX_X = CANVAS_WIDTH - 100;
 const TRIANGLE_MAX_Y = CANVAS_HEIGHT - 100;
-const TRIANGLE_SIZE = 30;
+const TRIANGLE_SIZE = 50;
+const HIT_BOX_TRIANGLE_DISTANCE = 40;
 
 var canvas;
 var gl;
@@ -36,6 +37,7 @@ var circleDirection = [1,0];
 var triangleAngle = 0;
 var triangleState = {};
 
+var user_score = 0;
 
 $(document).ready(function(){
   init();
@@ -107,7 +109,6 @@ function init()
 
 function initTriangleState(){
     triangleState = {
-        'isRendered' : true,
         'x' : getRandomInt(TRIANGLE_MIN_X, TRIANGLE_MAX_X),
         'y' : getRandomInt(TRIANGLE_MIN_Y, TRIANGLE_MAX_Y),
         'r' : TRIANGLE_SIZE,
@@ -236,6 +237,7 @@ function moveBall(){
     }
 
     checkCollision();
+    checkCollisionWithTriangle();
     if (translationCircle[0] + CIRCLE_X - CIRCLE_RADIUS < 0) circleDirection[0] = 1;
     if (translationCircle[0] + CIRCLE_X + CIRCLE_RADIUS > CANVAS_WIDTH) circleDirection[0] = 0;
     if (translationCircle[1] + CIRCLE_Y - CIRCLE_RADIUS < 0) circleDirection[1] = 1;
@@ -244,18 +246,27 @@ function moveBall(){
 
 function checkCollision(){
     let cirleLeftmostPoint = translationCircle[0] + CIRCLE_X - CIRCLE_RADIUS;
-    if (cirleLeftmostPoint <= rectwidth + translationRectangle[0] && cirleLeftmostPoint > rectwidth + translationRectangle[0] - 20){
+    if (cirleLeftmostPoint <= rectwidth + translationRectangle[0] && 
+        cirleLeftmostPoint > rectwidth + translationRectangle[0] - 20){
         let circleTopPoint = translationCircle[1] + CIRCLE_Y - CIRCLE_RADIUS;
         let circleBottomPoint = translationCircle[1] + CIRCLE_Y + CIRCLE_RADIUS;
 
-        if (circleTopPoint >= translationRectangle[1] && circleBottomPoint <= rectheight + translationRectangle[1]){
+        if (circleTopPoint >= translationRectangle[1] - 10 && circleBottomPoint <= rectheight + translationRectangle[1] + 10){
             circleDirection[0] = 1;
         }
     }
 }
 
 function checkCollisionWithTriangle(){
+    var circleCenterPoint = [translationCircle[0] + CIRCLE_X, translationCircle[1] + CIRCLE_Y];
 
+    var circleDistanceToTriangle = euclidDistance(circleCenterPoint[0], circleCenterPoint[1]
+        , triangleState.x, triangleState.y)
+
+    if (circleDistanceToTriangle < HIT_BOX_TRIANGLE_DISTANCE){
+        user_score += 1;
+        initTriangleState();
+    }
 }
 
 function checkLose(){
@@ -267,4 +278,8 @@ function triangleHandle(){
     triangleState.angle  = (triangleState.angle + 1) % 100;
     setTriangle(gl, triangleState.x, triangleState.y ,triangleState.r, triangleState.angle);
     render_triangle();
+}
+
+function euclidDistance(x1,y1,x2,y2){
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
 }
