@@ -3,8 +3,6 @@
 
 #define GAP 5
 
-int num = 0;
-
 typedef struct _cell
 {
     GLfloat eye[3];
@@ -19,9 +17,12 @@ cell lookAt[6] = {
     {{2.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}},
     {{0.0, 0.0, -2.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}},
     {{0.0, 2.0, 1.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}},
-    {{0.0, -2.0, 1.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}}
-    };
+    {{0.0, -2.0, 1.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}}};
 
+int num = 0;
+int state = 0;
+GLfloat theta;
+GLboolean rotate = GL_TRUE;
 GLuint mainWindow;
 GLuint subWindow[6];
 GLuint subWidth = 384, subHeight = 256;
@@ -32,6 +33,29 @@ void subDisplay();
 void mainReshape();
 void subReshape();
 void drawmodel();
+void redisplayAll();
+void mainMenu();
+
+void redisplayAll()
+{
+    for (int i = 0; i < 6; i++)
+    {
+        glutSetWindow(subWindow[i]);
+        glutPostRedisplay();
+        subReshape(subWidth, subHeight);
+    }
+}
+
+void mainMenu(int value)
+{
+    switch (value)
+    {
+    case 'r':
+        rotate = !rotate;
+        break;
+    }
+    redisplayAll();
+}
 
 void drawmodel(void)
 {
@@ -57,9 +81,18 @@ void display()
 
 void subDisplay()
 {
+    if (rotate)
+    {
+        state = (state + 1) % 1001;
+        theta = 360.0 * state / 1000;
+    }
+
     glClearColor(0.6, 0.6, 0.6, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPushMatrix();
+    glRotatef(theta, 0.0f, 1.0f, 0.0f);
     drawmodel();
+    glPopMatrix();
     glutSwapBuffers();
 }
 
@@ -78,8 +111,9 @@ void subReshape(int width, int height)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    if(++num==6){
-        num=0;
+    if (++num == 6)
+    {
+        num = 0;
     }
 }
 
@@ -110,7 +144,7 @@ int main(int argc, char *argv[])
     glutInitWindowPosition(50, 50);
     glutInit(&argc, argv);
 
-    mainWindow = glutCreateWindow("UTS GRAFKOM SOAL 2");
+    mainWindow = glutCreateWindow("CAR CCTV");
     glutDisplayFunc(display);
     glutReshapeFunc(mainReshape);
 
@@ -122,8 +156,11 @@ int main(int argc, char *argv[])
                                            subWidth, subHeight);
         glutDisplayFunc(subDisplay);
         glutReshapeFunc(subReshape);
+        glutCreateMenu(mainMenu);
+        glutAddMenuEntry("Toggle Rotation", 'r');
+        glutAttachMenu(GLUT_RIGHT_BUTTON);
     }
-
+    glutIdleFunc(redisplayAll);
     glutMainLoop();
 
     return 0;
