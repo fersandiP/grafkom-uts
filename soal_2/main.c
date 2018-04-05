@@ -39,13 +39,57 @@ void mainKeyboard(unsigned char key, int x, int);
 void drawRectangle(int x, int y, int width, int height);
 void drawWindowMark();
 
+/*
+ Fungsi-fungsi berikut berguna untuk mouse function pada setiap sub-sub window
+*/
+void f1(int b, int s, int x, int y) {
+	if (b == GLUT_LEFT_BUTTON && s == GLUT_DOWN) {
+		mainKeyboard('1', 0, 0); //Trigger event keyboard angka 1
+	}
+}
+void f2(int b, int s, int x, int y) {
+	if (b == GLUT_LEFT_BUTTON && s == GLUT_DOWN) {
+		mainKeyboard('2', 0, 0);//Trigger event keyboard angka 2
+	}
+}
+void f3(int b, int s, int x, int y) {
+	if (b == GLUT_LEFT_BUTTON && s == GLUT_DOWN) {
+		mainKeyboard('3', 0, 0);//Trigger event keyboard angka 3
+	}
+}
+void f4(int b, int s, int x, int y) {
+	if (b == GLUT_LEFT_BUTTON && s == GLUT_DOWN) {
+		mainKeyboard('4', 0, 0);//Trigger event keyboard angka 4
+	}
+}
+void f5(int b, int s, int x, int y) {
+	if (b == GLUT_LEFT_BUTTON && s == GLUT_DOWN) {
+		mainKeyboard('5', 0, 0);//Trigger event keyboard angka 4
+	}
+}
+void f6(int b, int s, int x, int y) {
+	if (b == GLUT_LEFT_BUTTON && s == GLUT_DOWN) {
+		mainKeyboard('6', 0, 0);//Trigger event keyboard angka 5
+	}
+}
+
+void(*mouseFunction[6])(int, int, int, int) = { f1,f2,f3,f4,f5,f6 };
+
+/*
+Fungsi berikut berguna untuk mengambar border pada active window
+*/
 void drawWindowMark()
 {
-    int x = (status % 3) * (subWidth + GAP);
-    int y = (status >= 3) * (subHeight + GAP);
+	// mengitung posisi x&y berdasarkan status
+    int x = (status % 3) * (subWidth + GAP); 
+    int y = (status >= 3) * (subHeight + GAP); 
     drawRectangle(x, y, subWidth + 2 * GAP, subHeight + 2 * GAP);
 }
 
+
+/*
+Fungsi ini adalah fungsi untuk menggambar rectangle
+*/
 void drawRectangle(int x, int y, int width, int height)
 {
     int x1 = x;
@@ -60,6 +104,10 @@ void drawRectangle(int x, int y, int width, int height)
     glVertex2i(x2, y1);
     glEnd();
 }
+
+/*
+Fungsi ini berguna untuk mereload display
+*/
 void redisplayAll()
 {
     glutSetWindow(mainWindow);
@@ -72,22 +120,29 @@ void redisplayAll()
     }
 }
 
+/*
+Fungsi ini adalah callback function dari keyboard event
+*/
 void mainKeyboard(unsigned char key, int x, int y)
 {
 
     if (key >= 'A' && key <= 'Z')
     {
-        key = key - 'A' + 'a';
+        key = key - 'A' + 'a'; //convert huruf besar ke huruf kecil
     }
     if (key >= '1' && key <= '6')
     {
-        status = key - '1';
+		//kalau keynya adalah key pergantian status, maka status diganti
+        status = key - '1'; 
     }
     else
-    {
+    {	//key a,s,d,q,e untuk mengubah eye
+		//key <,> untuk mengubah speed rotasi
+		//key r untuk toggle rotasi
+		//key x untuk quit
         switch (key)
         {
-        case 'a':
+        case 'a': 
             lookAt[status].eye[0] -= 0.1;
             break;
         case 'd':
@@ -122,12 +177,21 @@ void mainKeyboard(unsigned char key, int x, int y)
     redisplayAll();
 }
 
+
+/*
+Fungsi ini adalah callback function untuk menu
+*/
 void mainMenu(int value)
 {
+	//value dari menu adalah character yg sudah didefined untuk keyboard,
+	//jadi tinggal meneruskan saja valuenya ke fungsi keyboard event
     mainKeyboard((char)value, 0, 0);
     redisplayAll();
 }
 
+/*
+Fungsi untuk untuk menggambar model object yang berotasi
+*/
 void drawmodel(void)
 {
     if (!model)
@@ -143,6 +207,9 @@ void drawmodel(void)
     glmDraw(model, GLM_SMOOTH | GLM_MATERIAL);
 }
 
+/*
+Fungsi ini adalah fungsi display yang di bind ke main window
+*/
 void mainDisplay()
 {
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -151,8 +218,11 @@ void mainDisplay()
     glutSwapBuffers();
 }
 
+/*
+Fungsi ini adalah fungsi display yang di bind ke sub window
+*/
 void subDisplay()
-{
+{	//kalau rotate aktif maka state akan diincrease sesuai speed
     if (rotate)
     {
         state = (state + speed) % 5001;
@@ -168,6 +238,9 @@ void subDisplay()
     glutSwapBuffers();
 }
 
+/*
+Fungsi ini adalah fungsi reshape yang di bind ke sub window
+*/
 void subReshape(int width, int height)
 {
     glClearColor(0.0, 0.8, 0.0, 0.0);
@@ -191,6 +264,9 @@ void subReshape(int width, int height)
     }
 }
 
+/*
+Fungsi ini adalah fungsi reshape yang di bind ke main window
+*/
 void mainReshape(int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -206,6 +282,7 @@ void mainReshape(int width, int height)
     for (int i = 0; i < 6; i++)
     {
         glutSetWindow(subWindow[i]);
+		//kalkulasi x,y posisi saat redisplay
         glutPositionWindow(GAP + (i % 3) * (subWidth + GAP), GAP + (i >= 3) * (subHeight + GAP));
         glutReshapeWindow(subWidth, subHeight);
     }
@@ -218,13 +295,14 @@ int main(int argc, char *argv[])
     glutInitWindowPosition(50, 50);
     glutInit(&argc, argv);
 
-    mainWindow = glutCreateWindow("CAR CCTV");
+    mainWindow = glutCreateWindow("UTS Grafkom");
     glutDisplayFunc(mainDisplay);
     glutReshapeFunc(mainReshape);
     glutKeyboardFunc(mainKeyboard);
 
     for (int i = 0; i < 6; i++)
     {
+		//kalkulasi x,y posisi saat membuat subwindow
         subWindow[i] = glutCreateSubWindow(mainWindow,
                                            GAP + (i % 3) * (subWidth + GAP),
                                            GAP + (GAP + subHeight) * (i >= 3),
@@ -238,8 +316,9 @@ int main(int argc, char *argv[])
         glutAddMenuEntry("Decrease Speed (<)", '<');
         glutAddMenuEntry("Quit (x)", 'x');
         glutAttachMenu(GLUT_RIGHT_BUTTON);
+		glutMouseFunc(*mouseFunction[i]);
     }
-    glutIdleFunc(redisplayAll);
+    glutIdleFunc(redisplayAll); //idle function selalu mereload display sehingga terbuat animasi
     glutMainLoop();
 
     return 0;
