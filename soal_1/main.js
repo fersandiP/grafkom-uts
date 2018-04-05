@@ -1,22 +1,21 @@
 "use strict";
-const KEYLEFT = 37;
 const KEYUP = 38;
-const KEYRIGHT = 39;
 const KEYDOWN = 40;
-const KEY_A = 65;
 const KEY_W = 87;
-const KEY_D = 68;
 const KEY_S = 83;
-const MOVE_OFFSET = 70;
+
 const MOVE_CIRCLE_OFFSET = 7;
+const MOVE_OFFSET = 70;
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 720;
 
 const CIRCLE_RADIUS = 20;
 const CIRCLE_X = CANVAS_WIDTH/2;
 const CIRCLE_Y = CANVAS_HEIGHT/2;
+
 const rectwidth = 20;      // rectangle width
 const rectheight = 150;   // rectangle height
+
 const TRIANGLE_MIN_X = rectwidth + 200;
 const TRIANGLE_MIN_Y = 100;
 const TRIANGLE_MAX_X = CANVAS_WIDTH - 100;
@@ -44,6 +43,7 @@ $(document).ready(function(){
     $("#start-button").click(function(event){
         $(this).attr("disabled", "disabled");
         inGame = true;
+        $("#user-score").text(user_score);
         init();
     });
 
