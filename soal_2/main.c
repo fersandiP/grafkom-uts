@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "glm.h"
 
-#define GAP 5
+#define GAP 4
 
 typedef struct _cell
 {
@@ -19,7 +19,7 @@ cell lookAt[6] = {
     {{0.0, 2.0, 1.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}},
     {{0.0, -2.0, 1.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}}};
 
-int num = 0, state = 0, status = 0;
+int num = 0, state = 0, status = 0, speed = 5;
 GLfloat theta;
 GLboolean rotate = GL_TRUE;
 GLuint mainWindow;
@@ -41,7 +41,7 @@ void drawWindowMark();
 
 void drawWindowMark()
 {
-    int x = (status % 3) * (subWidth +  GAP);
+    int x = (status % 3) * (subWidth + GAP);
     int y = (status >= 3) * (subHeight + GAP);
     drawRectangle(x, y, subWidth + 2 * GAP, subHeight + 2 * GAP);
 }
@@ -74,6 +74,11 @@ void redisplayAll()
 
 void mainKeyboard(unsigned char key, int x, int y)
 {
+
+    if (key >= 'A' && key <= 'Z')
+    {
+        key = key - 'A' + 'a';
+    }
     if (key >= '1' && key <= '6')
     {
         status = key - '1';
@@ -100,6 +105,18 @@ void mainKeyboard(unsigned char key, int x, int y)
         case 'e':
             lookAt[status].eye[2] -= 0.1;
             break;
+        case 'r':
+            rotate = !rotate;
+            break;
+        case '<':
+            speed = (speed - 1) > 0 ? speed - 1 : 1;
+            break;
+        case '>':
+            speed = (speed + 1) <= 10 ? speed + 1 : 10;
+            break;
+        case 'x':
+            exit(0);
+            break;
         }
     }
     redisplayAll();
@@ -107,12 +124,7 @@ void mainKeyboard(unsigned char key, int x, int y)
 
 void mainMenu(int value)
 {
-    switch (value)
-    {
-    case 'r':
-        rotate = !rotate;
-        break;
-    }
+    mainKeyboard((char)value, 0, 0);
     redisplayAll();
 }
 
@@ -143,8 +155,8 @@ void subDisplay()
 {
     if (rotate)
     {
-        state = (state + 1) % 1001;
-        theta = 360.0 * state / 1000;
+        state = (state + speed) % 5001;
+        theta = 360.0 * state / 5000;
     }
 
     glClearColor(0.0, 0.8, 0.0, 0.0);
@@ -221,7 +233,10 @@ int main(int argc, char *argv[])
         glutReshapeFunc(subReshape);
         glutKeyboardFunc(mainKeyboard);
         glutCreateMenu(mainMenu);
-        glutAddMenuEntry("Toggle Rotation", 'r');
+        glutAddMenuEntry("Toggle Rotation (r)", 'r');
+        glutAddMenuEntry("Increase Speed (>)", '>');
+        glutAddMenuEntry("Decrease Speed (<)", '<');
+        glutAddMenuEntry("Quit (x)", 'x');
         glutAttachMenu(GLUT_RIGHT_BUTTON);
     }
     glutIdleFunc(redisplayAll);
