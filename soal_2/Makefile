@@ -22,6 +22,11 @@ LDFLAGS = -framework OpenGL -framework GLUT
 # Universal binary support
 CFLAGS  += -arch i386
 endif
+ifeq ($(UNAME), CYGWIN_NT-5.1)  # Cygwin
+# OpenGL and GLUT libs are named differently, override LDFLAGS above
+LDFLAGS = -lopengl32 -lglu32 -lglut32
+EXE = .exe
+endif
 
 
 all: clean makedir $(OUT)$(PROGRAMS)
