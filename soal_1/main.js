@@ -205,8 +205,8 @@ function setBall(gl, r, x, y){
         r*Math.sin(2*Math.PI*i/50.0) + y
         ));
 
-}
-gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
 }
 
 function setTriangle(gl, x, y, r, angle){
@@ -298,12 +298,13 @@ function gameStopHandle(){
 
 function updateScore(){
     $("#user-score").text(user_score);
+}
 
 /*
     HELPER FUNCTION
 */
 function euclidDistance(x1,y1,x2,y2){
-    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 }
 
 //source : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
@@ -312,4 +313,3 @@ function getRandomInt(min, max) {
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
-
