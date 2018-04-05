@@ -48,6 +48,7 @@ $(document).ready(function(){
     });
 
   $(document).keydown(function(event) {
+	event.preventDefault();
     if (!inGame){return;}
 
     // Move Up
