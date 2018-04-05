@@ -17,16 +17,24 @@ const CIRCLE_X = CANVAS_WIDTH/2;
 const CIRCLE_Y = CANVAS_HEIGHT/2;
 const rectwidth = 20;      // rectangle width
 const rectheight = 150;   // rectangle height
+const TRIANGLE_MIN_X = rectwidth + 200;
+const TRIANGLE_MIN_Y = 100;
+const TRIANGLE_MAX_X = CANVAS_WIDTH - 100;
+const TRIANGLE_MAX_Y = CANVAS_HEIGHT - 100;
+const TRIANGLE_SIZE = 30;
 
 var canvas;
 var gl;
 var colorUniformLocation;
+var matrixLocation;
 var translationRectangle = [100, CANVAS_HEIGHT/2 - rectheight/2]; //top-left of rectangle
 var translationCircle = [0,0];
 
 var translationLocation;
 
 var circleDirection = [1,0];
+var triangleAngle = 0;
+var triangleState = {};
 
 
 $(document).ready(function(){
@@ -37,18 +45,25 @@ $(document).ready(function(){
     if (event.which == KEYUP || event.which == KEY_W){
       if (translationRectangle[1] > 0){
         translationRectangle[1] = Math.max(0, translationRectangle[1] - MOVE_OFFSET);
-      }
     }
+}
 
     // Move down
     if (event.which == KEYDOWN || event.which == KEY_S){
       if (translationRectangle[1] < CANVAS_HEIGHT - rectheight){
         translationRectangle[1] = Math.min(CANVAS_HEIGHT - rectheight, translationRectangle[1] + MOVE_OFFSET);
-      }
     }
-  });
+}
+});
 
 });
+
+//source : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
 
 function init()
 {
@@ -77,15 +92,34 @@ function init()
     gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
-	// set the translation
-	var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
-	translationLocation = gl.getUniformLocation(program, "u_translation");
-	
-	// set the resolution
-  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-  colorUniformLocation = gl.getUniformLocation(program, "u_color");
+    // set the translation
+    var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+    translationLocation = gl.getUniformLocation(program, "u_translation");
 
-	render(); //default render
+    // set the resolution
+    gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+    colorUniformLocation = gl.getUniformLocation(program, "u_color");
+
+    initTriangleState();
+
+    render(); //default render
+}
+
+function initTriangleState(){
+    triangleState = {
+        'isRendered' : true,
+        'x' : getRandomInt(TRIANGLE_MIN_X, TRIANGLE_MAX_X),
+        'y' : getRandomInt(TRIANGLE_MIN_Y, TRIANGLE_MAX_Y),
+        'r' : TRIANGLE_SIZE,
+        'angle' : 0,
+    };
+}
+
+function rotateTriangleState(){
+    var centerTriangle = [triangleState.x + triangleState.r/2, triangleState.y - triangleState.r/2];
+
+    triangleState.angle += 1;
+    triangleState.angle %= 50;
 }
 
 function render(){
@@ -97,22 +131,21 @@ function render(){
   moveBall();
   render_ball();
 
-  setRectangle(gl, 100,120,150);
-  render_rectangle();
+  triangleHandle()
 
   if (!checkLose()){
     requestAnimationFrame(render);
-  }
+}
 }
 
 function render_rectangle(){
   gl.uniform4f(colorUniformLocation, 1.0, 0, 0, 1);
   gl.uniform2fv(translationLocation, translationRectangle);
-    
+
   var primitiveType = gl.TRIANGLES;
   var offset = 0;
   var count = 6;
-    
+
   gl.drawArrays( primitiveType, offset, count );
 
 }
@@ -122,20 +155,22 @@ function render_ball()
     gl.uniform4f(colorUniformLocation, 0.0, 1.0, 0, 1);
     gl.uniform2fv(translationLocation, translationCircle);
 
-	var primitiveType = gl.TRIANGLE_FAN;
-	var offset = 0;
-	var count = 102;
-		
-	gl.drawArrays( primitiveType, offset, count );
-	
+
+    var primitiveType = gl.TRIANGLE_FAN;
+    var offset = 0;
+    var count = 52;
+
+    gl.drawArrays( primitiveType, offset, count );
+
 }
 
 function render_triangle(){
-    gl.uniform4f(colorUniformLocation, 0.0, 1.0, 0, 1);
+    gl.uniform4f(colorUniformLocation, 0.0, 1.0, 1.0, 1);
+    gl.uniform2fv(translationLocation, [0,0]);
 
-    var primitiveType = gl.TRIANGLES;
+    var primitiveType = gl.TRIANGLE_FAN;
     var offset = 0;
-    var count = 3;
+    var count = 4;
 
     gl.drawArrays(primitiveType, offset, count);
 }
@@ -147,13 +182,13 @@ function setRectangle(gl, x, y, width, height) {
   var y1 = y;
   var y2 = y + height;
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-     x1, y1,
-     x2, y1,
-     x1, y2,
-     x1, y2,
-     x2, y1,
-     x2, y2,
-  ]), gl.STATIC_DRAW);
+   x1, y1,
+   x2, y1,
+   x1, y2,
+   x1, y2,
+   x2, y1,
+   x2, y2,
+   ]), gl.STATIC_DRAW);
 }
 
 function setBall(gl, r, x, y){
@@ -161,22 +196,30 @@ function setBall(gl, r, x, y){
   var center = vec2(x, y); 
 
   points.push(center);
-  for (let i = 0; i <= 100; i++){
+  for (let i = 0; i <= 50; i++){
     points.push(vec2(
-        r*Math.cos(2*Math.PI*i/100.0) + x,
-        r*Math.sin(2*Math.PI*i/100.0) + y
-    ));
+        r*Math.cos(2*Math.PI*i/50.0) + x,
+        r*Math.sin(2*Math.PI*i/50.0) + y
+        ));
 
-    }
-  gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
+}
+gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
 }
 
-function setTriangle(gl,x,y,z){
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        x, y,
-        y, z,
-        z, x,
-        ]), gl.STATIC_DRAW);
+function setTriangle(gl, x, y, r, angle){
+  var x1 = r * Math.cos(2*Math.PI*angle/100.0) + x;
+  var y1 = r * Math.sin(2*Math.PI*angle/100.0) + y;
+  var x2 = r * Math.cos(2*Math.PI*angle/100.0 + (2.0/3)*Math.PI) + x;
+  var y2 = r * Math.sin(2*Math.PI*angle/100.0 + (2.0/3)*Math.PI) + y;
+  var x3 = r * Math.cos(2*Math.PI*angle/100.0 + (4.0/3)*Math.PI) + x;
+  var y3 = r * Math.sin(2*Math.PI*angle/100.0 + (4.0/3)*Math.PI) + y;
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    x, y,
+    x1, y1,
+    x2, y2,
+    x3, y3,
+    ]), gl.STATIC_DRAW);
 }
 
 function moveBall(){
@@ -211,84 +254,17 @@ function checkCollision(){
     }
 }
 
+function checkCollisionWithTriangle(){
+
+}
+
 function checkLose(){
     let circleCenterPoint = translationCircle[0] + CIRCLE_X;
     return circleCenterPoint <= rectwidth
 }
- 
-var m3 = {            //setup 3x3 transformation matrix object
-   identity: function() {
-    return [
-      1, 0, 0,
-      0, 1, 0,
-      0, 0, 1,
-    ];
-   },
-   
-   projection: function(width, height) {
-    // Note: This matrix flips the Y axis so that 0 is at the top.
-    return [
-      2 / width, 0, 0,
-      0, -2 / height, 0,
-      -1, 1, 1
-    ];
-   },
 
-  translation: function(tx, ty) {
-    return [
-      1, 0, 0,
-      0, 1, 0,
-      tx, ty, 1,
-    ];
-  },
-
-  rotation: function(angleInRadians) {
-    var c = Math.cos(angleInRadians);
-    var s = Math.sin(angleInRadians);
-    return [
-      c,-s, 0,
-      s, c, 0,
-      0, 0, 1,
-    ];
-  },
-
-  scaling: function(sx, sy) {
-    return [
-      sx, 0, 0,
-      0, sy, 0,
-      0, 0, 1,
-    ];
-  },
-
-  multiply: function(a, b) {
-    var a00 = a[0 * 3 + 0];
-    var a01 = a[0 * 3 + 1];
-    var a02 = a[0 * 3 + 2];
-    var a10 = a[1 * 3 + 0];
-    var a11 = a[1 * 3 + 1];
-    var a12 = a[1 * 3 + 2];
-    var a20 = a[2 * 3 + 0];
-    var a21 = a[2 * 3 + 1];
-    var a22 = a[2 * 3 + 2];
-    var b00 = b[0 * 3 + 0];
-    var b01 = b[0 * 3 + 1];
-    var b02 = b[0 * 3 + 2];
-    var b10 = b[1 * 3 + 0];
-    var b11 = b[1 * 3 + 1];
-    var b12 = b[1 * 3 + 2];
-    var b20 = b[2 * 3 + 0];
-    var b21 = b[2 * 3 + 1];
-    var b22 = b[2 * 3 + 2];
-    return [
-      b00 * a00 + b01 * a10 + b02 * a20,
-      b00 * a01 + b01 * a11 + b02 * a21,
-      b00 * a02 + b01 * a12 + b02 * a22,
-      b10 * a00 + b11 * a10 + b12 * a20,
-      b10 * a01 + b11 * a11 + b12 * a21,
-      b10 * a02 + b11 * a12 + b12 * a22,
-      b20 * a00 + b21 * a10 + b22 * a20,
-      b20 * a01 + b21 * a11 + b22 * a21,
-      b20 * a02 + b21 * a12 + b22 * a22,
-    ];
-  },
-};
+function triangleHandle(){
+    triangleState.angle  = (triangleState.angle + 1) % 100;
+    setTriangle(gl, triangleState.x, triangleState.y ,triangleState.r, triangleState.angle);
+    render_triangle();
+}
