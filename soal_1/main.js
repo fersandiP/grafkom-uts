@@ -1,14 +1,62 @@
 "use strict";
+const KEYLEFT = 37;
+const KEYUP = 38;
+const KEYRIGHT = 39;
+const KEYDOWN = 40;
+const KEY_A = 65;
+const KEY_W = 87;
+const KEY_D = 68;
+const KEY_S = 83;
+const MOVE_OFFSET = 20;
+const CANVAS_WIDTH = 1200;
+const CANVAS_HEIGHT = 720;
 
 var canvas;
 var gl;
 var colorUniformLocation;
-var translation = [0, 0]; //top-left of rectangle
-var rectwidth = 100;      // rectangle width
-var rectheight = 30;	  // rectangle height
-var translationLocation;  
+var translation = [30, 10]; //top-left of rectangle
+const rectwidth = 20;      // rectangle width
+const rectheight = 100;   // rectangle height
+var translationLocation;
 
-window.onload = function init()
+
+$(document).ready(function(){
+  init();
+
+  $("#sliderX").change(function(e){
+    translation[0] = e.target.value;
+    $("#Xvalue").innerHTML = translation[0];
+    render();
+  });
+
+  $("#sliderY").change(function(e){
+    translation[1] = e.target.value;
+    $("#Yvalue").innerHTML = translation[1];
+    render();
+  });
+
+  $(document).keydown(function(event) {
+    // Move Up
+    if (event.which == KEYUP || event.which == KEY_W){
+      if (translation[1] > 0){
+        translation[1] = Math.max(0, translation[1] - MOVE_OFFSET);
+      }
+    }
+
+    // Move down
+    if (event.which == KEYDOWN || event.which == KEY_S){
+      if (translation[1] < CANVAS_HEIGHT - rectheight){
+        translation[1] = Math.min(CANVAS_HEIGHT, translation[1] + MOVE_OFFSET);
+      }
+    }
+
+    render();
+  });
+
+  setInterval(render, 100);
+});
+
+function init()
 {
     canvas = document.getElementById( "gl-canvas" );
 
@@ -44,24 +92,6 @@ window.onload = function init()
 	// set the resolution
     gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
 	colorUniformLocation = gl.getUniformLocation(program, "u_color");
-	
-	//Update  X according to X slider
-	var Xvalue = document.getElementById("Xvalue");
-	Xvalue.innerHTML = translation[0];
-	document.getElementById("sliderX").onchange = function(event) {
-        translation[0] = event.target.value;
-		Xvalue.innerHTML = translation[0];
-		render();
-    };
-	
-   //Update Y according to Y slider
-    var Yvalue = document.getElementById("Yvalue");
-    Yvalue.innerHTML = translation[1];
-    document.getElementById("sliderY").onchange = function(event) {
-        translation[1] = event.target.value;
-		Yvalue.innerHTML = translation[1];
-		render();
-    };
 
 	render(); //default render
 }
