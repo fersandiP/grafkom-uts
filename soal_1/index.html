@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-<title>Soal 1 -  UTS Grafkom</title>
+<title>UTS Grafkom</title>
 
 <!-- Modification from rectangles.html/JS to setup rectangle so it can translate X and/or Y according to slider's  -->
 <!-- Modify vertex shader to perform translation by adding u_translation uniform variable -->
@@ -43,19 +43,43 @@ main()
 }
 </script>
 
+<link rel="stylesheet" type="text/css" href="main.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script type="text/javascript" src="Common/webgl-utils.js"></script>
 <script type="text/javascript" src="Common/initShaders.js"></script>
 <script type="text/javascript" src="Common/MV.js"></script>
 <script type="text/javascript" src="main.js"></script>
 </head>
 
-<body> 
+<body>
+	<div class="container-fluid">
+		<div class="row">
+			<h4>PANG PONG</h4>
+		</div>
+		<div class="row">
+			<div class="col-md-10">
+				<canvas id="gl-canvas" width="1200" height="720">
+				Oops ... your browser doesn't support the HTML5 canvas element
+				</canvas>
+			</div>
+			<div class="col-md-2">
+				<h5>Control : </h5>
+				<ul>
+					<li>W, Up : Move up</li>
+					<li>S, down : Move down</li>
+				</ul>
 
+				<h5>How To Play :</h5>
+				<p>Collect rotated triangle as many as you can! If the ball reach the leftmost region, you lose :(</p>
 
-<canvas id="gl-canvas" width="1200" height="720">
-Oops ... your browser doesn't support the HTML5 canvas element
-</canvas>
+				<h5>Current Score : <span id="user-score">0</span></h5>
 
+				<button type="button" class="btn btn-primary" id="start-button">Start Game!</button>
+			</div>
+		</div>
+	</div>
 </body>
 </html>
